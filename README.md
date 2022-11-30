@@ -12,6 +12,8 @@ Only `-t` or `--timeout` is required, which can be either seconds, minutes or ho
 
 If `--single` is not given, repeats alarm every 60s until notification is clicked.
 
+Example `npm ./run.js -t 60s -m 'Do something'`
+
 ```
 usage: run.js [-h] [-ti TITLE] [-m MESSAGE] -t TIMEOUT [-s SOUND] [-i ICON] [--no-sound] [--no-notification] [--single]
 
