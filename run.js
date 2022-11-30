@@ -16,6 +16,9 @@ const __dirname = dirname(__filename);
 import notifier from "node-notifier";
 import path from "path";
 
+const LOG_INTERVAL = 1000;
+const REPEAT_INTERVAL = 60000;
+
 const log = (...args) => console.log(...[`[${Date.now()}]`, ...args]);
 
 const getShowNotification =
@@ -128,7 +131,6 @@ const initAlarm = ({
     );
 
     const start = Date.now();
-    const LOG_INTERVAL = 1000;
 
     const getTimeElapsed = () => Date.now() - start;
     const getTimeLeft = () => msTimeout - getTimeElapsed();
@@ -161,7 +163,7 @@ const initAlarm = ({
         }
         alarm();
         if (!single) {
-          alarmInterval = setTimeout(doAlarm, 10000);
+          alarmInterval = setTimeout(doAlarm, REPEAT_INTERVAL);
         }
         i++;
       };
