@@ -1,0 +1,7 @@
+{
+  "REPEAT_INTERVAL": 60000,
+  "LOG_INTERVAL": 1000,
+  "DEFAULT_SOUND": "alarm1.wav",
+  "DEFAULT_ICON": "icon.png",
+  "DEBUG": 0
+}

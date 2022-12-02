@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*
     alarm1 - https://freesound.org/people/bone666138/sounds/198841/
 */
@@ -16,10 +18,27 @@ const __dirname = dirname(__filename);
 import notifier from "node-notifier";
 import path from "path";
 
-const LOG_INTERVAL = 1000;
-const REPEAT_INTERVAL = 60000;
-
 const log = (...args) => console.log(...[`[${Date.now()}]`, ...args]);
+
+const _getConfig =
+  ({ log }) =>
+  (prop, def) => {
+    let config = {};
+    try {
+      const CONFIG_FILE = path.join(__dirname, "config.json");
+      config = JSON.parse(fs.readFileSync(CONFIG_FILE)) || {};
+    } catch (err) {
+      log("Failed to read config.json");
+    }
+    const envs = process.env;
+    return envs[prop] || config[prop] || def;
+  };
+const getConfig = _getConfig({ log });
+const DEBUG = getConfig("DEBUG", false);
+const LOG_INTERVAL = getConfig("LOG_INTERVAL", 1000);
+const REPEAT_INTERVAL = getConfig("REPEAT_INTERVAL", 60_000);
+const DEFAULT_SOUND = getConfig("DEFAULT_SOUND", "alarm1.wav");
+const DEFAULT_ICON = getConfig("DEFAULT_ICON", "icon.png");
 
 const getShowNotification =
   ({ notifier, fnAck, log, fileIcon }) =>
@@ -99,29 +118,64 @@ const initAlarm = ({
       if (!noNotification) fnShowNotification();
     };
 
-  return ({ timeout, message: { title, message } }) => {
-    const sTimeout = timeout.toString();
-    const timeoutSymbol = (timeout[timeout.length - 1] || "").toLowerCase();
-    const isMinutes = timeoutSymbol === "m";
-    const isHours = timeoutSymbol === "h";
-    const isDefault = !isMinutes && !isHours;
-    const isSeconds = timeoutSymbol === "s" || isDefault;
+  const getTimeout = (rawValue) => {
+    const sTimeout = rawValue.toString().trim();
 
-    const timeoutNumeric = sTimeout.replace(/\D+/, "");
-    const iTimeoutNumeric = parseInt(timeoutNumeric, 10);
-    const isTimeoutValid = !isNaN(iTimeoutNumeric);
+    const dNow = new Date();
+    // const tzOffsetMs = dNow.getTimezoneOffset() * 60 * 1000;
+    const now = dNow.valueOf();
+    const regexTime = /^([0-2]?[0-9])\:([0-5][0-9])$/;
+    // const parsedDateTimestamp = Date.parse(sTimeout) + tzOffsetMs;
+    const parsedDateTimestamp = Date.parse(sTimeout);
+    const isDate = !Number.isNaN(parsedDateTimestamp);
+    const isTime = regexTime.test(sTimeout);
+    const isTimerValue = !isDate && !isTime;
 
-    if (!isTimeoutValid) {
-      throw new Error(`Invalid timeout value: ${timeout}`);
+    let msTimeout = null;
+    if (isDate) {
+      // Full date string.
+      // TODO: Doesn't work properly with only date `2021-01-01` due to Date.parse, use date-fn instead.
+      const msDiff = parsedDateTimestamp - now;
+      msTimeout = Math.round(msDiff);
+    } else if (isTime) {
+      // Only time part of date.
+      const dateBase = dNow.toISOString().slice(0, 10);
+      const sDate = `${dateBase}T${sTimeout}`;
+      const parsed = Date.parse(sDate);
+      const msDiff = parsed - now;
+      msTimeout = Math.round(msDiff);
+    } else if (isTimerValue) {
+      // Relative time.
+      const timeoutSymbol = (timeout[timeout.length - 1] || "").toLowerCase();
+      const isMinutes = timeoutSymbol === "m";
+      const isHours = timeoutSymbol === "h";
+      const isDefault = !isMinutes && !isHours;
+      const isSeconds = timeoutSymbol === "s" || isDefault;
+
+      const timeoutNumeric = sTimeout.replace(/\D+/, "");
+      const iTimeoutNumeric = parseInt(timeoutNumeric, 10);
+      const isTimeoutValid = !isNaN(iTimeoutNumeric);
+
+      if (!isTimeoutValid) {
+        return Error(`Invalid timeout value: ${timeout}`);
+      }
+
+      if (isSeconds) msTimeout = iTimeoutNumeric * 1000;
+      if (isMinutes) msTimeout = iTimeoutNumeric * 1000 * 60;
+      if (isHours) msTimeout = iTimeoutNumeric * 1000 * 60 * 60;
     }
 
-    let msTimeout = 0;
-    if (isSeconds) msTimeout = iTimeoutNumeric * 1000;
-    if (isMinutes) msTimeout = iTimeoutNumeric * 1000 * 60;
-    if (isHours) msTimeout = iTimeoutNumeric * 1000 * 60 * 60;
+    if (!msTimeout || msTimeout <= 0) {
+      return Error(`Invalid timeout value: ${timeout}, ms: ${msTimeout}`);
+    }
 
-    if (msTimeout <= 0) {
-      throw new Error(`Invalid timeout value: ${timeout}, ms: ${msTimeout}`);
+    return msTimeout;
+  };
+
+  return ({ timeout, message: { title, message } }) => {
+    const msTimeout = getTimeout(timeout);
+    if (msTimeout instanceof Error) {
+      throw msTimeout;
     }
 
     log(
@@ -225,22 +279,42 @@ const {
 
 if (!timeout) throw new Error("Timeout is required");
 
-initAlarm({
-  getPlaySound,
-  getShowNotification,
-  log,
-  notifier,
-  config: {
+if (DEBUG)
+  log({
+    title,
+    message,
+    timeout,
+    noSound,
+    noNotification,
     sound,
     icon,
-    noNotification,
-    noSound,
     single,
-  },
-})({
-  timeout,
-  message: {
-    message,
-    title,
-  },
-});
+    DEBUG,
+    DEFAULT_ICON,
+    DEFAULT_SOUND,
+  });
+
+try {
+  initAlarm({
+    getPlaySound,
+    getShowNotification,
+    log,
+    notifier,
+    config: {
+      sound: sound || DEFAULT_SOUND,
+      icon: icon || DEFAULT_ICON,
+      noNotification,
+      noSound,
+      single,
+    },
+  })({
+    timeout,
+    message: {
+      message,
+      title,
+    },
+  });
+} catch (err) {
+  log(err.message || "Unknown error");
+  process.exit(1);
+}
