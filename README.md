@@ -1,14 +1,22 @@
 # node-timer-win
 
-* From terminal, set up a timer on Windows which, when expired, shows notification and plays an alarm sound.
-* Simple alarm that can be started from terminal, no fuss
+- From terminal, set up a timer on Windows which, when expired, shows notification and plays an alarm sound.
+- Simple alarm that can be started from terminal, no fuss
+
+## Installing
+
+`npm install -g node_terminal_timer`
+`npx node_terminal_timer` <- run without install
 
 ## Usage
 
 Only `-t` or `--timeout` is required, which can be either seconds, minutes or hours.
-* `10s` 10 seconds
-* `1m` 60 seconds / 1 minute
-* `1h` 3600 seconds / 60 minutes / 1 hour
+
+- `10s` 10 seconds
+- `1m` 60 seconds / 1 minute
+- `1h` 3600 seconds / 60 minutes / 1 hour
+
+Timeout can also be full ISO-8601 date string e.g. `2022-01-01 14:00` or time e.g. `18:00`;
 
 If `--single` is not given, repeats alarm every 60s until notification is clicked.
 
