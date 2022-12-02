@@ -6,6 +6,7 @@
 ## Installing
 
 `npm install -g node_terminal_timer`
+
 `npx node_terminal_timer` <- run without install
 
 ## Usage
