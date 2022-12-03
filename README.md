@@ -21,7 +21,7 @@ Timeout can also be full ISO-8601 date string e.g. `2022-01-01 14:00` or time e.
 
 If `--single` is not given, repeats alarm every 60s until notification is clicked.
 
-Example `npm ./run.js -t 60s -m 'Do something'`
+Example `npx node_terminal_timer -t 60s -m 'Do something'`
 
 ```
 usage: run.js [-h] [-ti TITLE] [-m MESSAGE] -t TIMEOUT [-s SOUND] [-i ICON] [--no-sound] [--no-notification] [--single]
