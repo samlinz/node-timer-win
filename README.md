@@ -1,7 +1,9 @@
 # node-timer-win
 
-- From terminal, set up a timer on Windows which, when expired, shows notification and plays an alarm sound.
+- From terminal, set up a timer on Windows or Mac which, when expired, shows notification and plays an alarm sound.
 - Simple alarm that can be started from terminal, no fuss
+- Works on Windows, MacOS
+  - Linux not tested, might work with some tweaking, but have to check the dependencies
 
 ## Installing
 
@@ -43,3 +45,8 @@ optional arguments:
   --no-notification     Don't show notification
   --single              Don't repeat alarm until acknowledged
 ```
+
+## Troubleshooting
+
+* Notifications not displaying on Mac -> must give notification permissions for "terminal_notifier" from Accessiblity settings
+  * On my machine this wasn't prompted automatically so I had to apply them manually
