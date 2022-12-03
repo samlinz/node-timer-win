@@ -1,5 +1,3 @@
-# node-timer-win
-
 - From terminal, set up a timer on Windows or Mac which, when expired, shows notification and plays an alarm sound.
 - Simple alarm that can be started from terminal, no fuss
 - Works on Windows, MacOS
